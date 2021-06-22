@@ -13,7 +13,7 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go src.ReadFile(conf.FilePath, &wg, logsChannel, conf.ServiceName)
+	go src.ReadFile(conf.FilePath, &wg, logsChannel, conf.ServiceName, true)
 	// Do every 5 seconds
 	go src.FlushEveryFiveSeconds(logsChannel, &wg)
 	wg.Wait()

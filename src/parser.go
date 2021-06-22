@@ -66,7 +66,10 @@ func parseNginxLog(logLine string) LogStruct {
 
 func parseGenericLog(logLine string) LogStruct {
 	// matches Golang like log : 2009/01/23 01:23:23 message...
-	re := regexp.MustCompile(`(?P<datetime>\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}) (?P<message>\w+)`)
+	if logLine == "" {
+		return LogStruct{}
+	}
+	re := regexp.MustCompile(`(?P<datetime>\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}) (?P<message>[\.\w ]+)`)
 	match := re.FindStringSubmatch(logLine)
 	result := make(map[string]string)
 	for i, name := range re.SubexpNames() {
@@ -104,11 +107,11 @@ func parseSyslog(logLine string) LogStruct {
 	parsedTime = parsedTime.AddDate(currentYear, 0, 0)
 
 	return LogStruct{
-		"",
+		result["machinename"],
 		"",
 		parsedTime,
 		result["message"],
-		"generic",
+		"syslog",
 		HTTP{},
 	}
 

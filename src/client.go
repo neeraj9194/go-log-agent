@@ -11,9 +11,9 @@ import (
 	"github.com/hpcloud/tail"
 )
 
-func ReadFile(filename string, wg *sync.WaitGroup, logsChannel chan LogStruct, service string) {
+func ReadFile(filename string, wg *sync.WaitGroup, logsChannel chan LogStruct, service string, follow bool) {
 	defer wg.Done()
-	t, _ := tail.TailFile(filename, tail.Config{Follow: true})
+	t, _ := tail.TailFile(filename, tail.Config{Follow: follow})
 	for line := range t.Lines {
 
 		if len(logsChannel) == cap(logsChannel) {
