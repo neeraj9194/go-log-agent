@@ -1,7 +1,6 @@
 package config
 
 import (
-	// "github.com/go-yaml/yaml"
 	"fmt"
 
 	"github.com/jinzhu/configor"
@@ -10,23 +9,12 @@ import (
 type Config struct {
 	FilePath    string
 	ServiceName string
+	ServerURL   string
 }
 
-// func LoadConfig() Config {
-// 	configLoader := NewLoader("/home/neeraj/projects/go-log-agent/config/config.yaml")
-
-// 	config := &Config{}
-
-// 	err := configLoader.Load(yaml.Unmarshal, config)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	return *config
-// }
-
-func LoadConfig() Config {
+func LoadConfig(fileName string) Config {
 	config := Config{}
-	configor.Load(&config, "/home/neeraj/projects/go-log-agent/config/config.yaml")
+	configor.Load(&config, fileName)
 	fmt.Printf("config: %#v\n", config)
 	return config
 }

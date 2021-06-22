@@ -1,2 +1,3 @@
 filepath: /var/log/syslog
 servicename: syslog
+serverurl: https://webhook.site/c11e67a9-198d-4f2e-a130-6604aaaa471f

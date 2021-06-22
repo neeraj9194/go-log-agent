@@ -60,7 +60,7 @@ func TestParseGeneric(t *testing.T) {
 		"",
 		d,
 		"Hello world this is a log message.",
-		"generic",
+		"",
 		HTTP{},
 	}
 	parsedLog := ParseLog("", testString)

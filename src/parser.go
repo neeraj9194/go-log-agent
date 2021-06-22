@@ -64,32 +64,6 @@ func parseNginxLog(logLine string) LogStruct {
 
 }
 
-func parseGenericLog(logLine string) LogStruct {
-	// matches Golang like log : 2009/01/23 01:23:23 message...
-	if logLine == "" {
-		return LogStruct{}
-	}
-	re := regexp.MustCompile(`(?P<datetime>\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}) (?P<message>[\.\w ]+)`)
-	match := re.FindStringSubmatch(logLine)
-	result := make(map[string]string)
-	for i, name := range re.SubexpNames() {
-		if i != 0 && name != "" {
-			result[name] = match[i]
-		}
-	}
-	parsedTime, _ := time.Parse("Jan 02 15:04:05", result["datetime"])
-
-	return LogStruct{
-		"",
-		"",
-		parsedTime,
-		result["message"],
-		"generic",
-		HTTP{},
-	}
-
-}
-
 // ===========Syslog============
 func parseSyslog(logLine string) LogStruct {
 	// matches Golang like log : 2009/01/23 01:23:23 message...
@@ -117,6 +91,35 @@ func parseSyslog(logLine string) LogStruct {
 
 }
 
+
+// ===========Generic parser============
+func parseGenericLog(logLine string, service string) LogStruct {
+	// matches Golang like log : 2009/01/23 01:23:23 message...
+	if logLine == "" {
+		return LogStruct{}
+	}
+	re := regexp.MustCompile(`(?P<datetime>\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}) (?P<message>[\.\w ]+)`)
+	match := re.FindStringSubmatch(logLine)
+	result := make(map[string]string)
+	for i, name := range re.SubexpNames() {
+		if i != 0 && name != "" {
+			result[name] = match[i]
+		}
+	}
+	parsedTime, _ := time.Parse("Jan 02 15:04:05", result["datetime"])
+
+	return LogStruct{
+		"",
+		"",
+		parsedTime,
+		result["message"],
+		service,
+		HTTP{},
+	}
+
+}
+
+
 func ParseLog(service string, log string) LogStruct {
 
 	switch service {
@@ -125,7 +128,7 @@ func ParseLog(service string, log string) LogStruct {
 	case "nginx":
 		return parseNginxLog(log)
 	default:
-		return parseGenericLog(log)
+		return parseGenericLog(log, service)
 	}
 
 }

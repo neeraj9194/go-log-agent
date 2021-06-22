@@ -9,6 +9,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/neeraj9194/go-log-agent/config"
 )
 
 func TestReadFile(t *testing.T) {
@@ -34,9 +36,15 @@ func TestReadFile(t *testing.T) {
 	
 	testChannel := make(chan LogStruct, 100)
 	var wg sync.WaitGroup
+
+	conf := config.Config{
+		FilePath: file.Name(),   
+		ServiceName: "generic",
+		ServerURL: "string",
+	}
 	
 	wg.Add(1)
-	ReadFile(file.Name(), &wg, testChannel, "generic", false)
+	ReadFile(conf, &wg, testChannel, false)
 
 	val := <-testChannel
 

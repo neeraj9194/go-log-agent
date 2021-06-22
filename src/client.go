@@ -9,26 +9,27 @@ import (
 	"time"
 
 	"github.com/hpcloud/tail"
+	"github.com/neeraj9194/go-log-agent/config"
 )
 
-func ReadFile(filename string, wg *sync.WaitGroup, logsChannel chan LogStruct, service string, follow bool) {
+func ReadFile(conf config.Config, wg *sync.WaitGroup, logsChannel chan LogStruct, follow bool) {
 	defer wg.Done()
-	t, _ := tail.TailFile(filename, tail.Config{Follow: follow})
+	t, _ := tail.TailFile(conf.FilePath, tail.Config{Follow: follow})
 	for line := range t.Lines {
 
 		if len(logsChannel) == cap(logsChannel) {
 			// Channel was full, but might not be by now
 			fmt.Println("Channel full. Flushing!")
-			flush(logsChannel, wg)
+			flush(conf, logsChannel, wg)
 		}
 
-		l := ParseLog(service, line.Text)
+		l := ParseLog(conf.ServiceName, line.Text)
 		logsChannel <- l
 	}
 	close(logsChannel)
 }
 
-func flush(c chan LogStruct, wg *sync.WaitGroup) {
+func flush(conf config.Config, c chan LogStruct, wg *sync.WaitGroup) {
 	wg.Add(1)
 	defer wg.Done()
 
@@ -39,20 +40,19 @@ func flush(c chan LogStruct, wg *sync.WaitGroup) {
 		case val := <-c:
 			valList = append(valList, val)
 		default:
-			go sendToServer(valList)
+			go sendToServer(conf.ServerURL, valList)
 			return
 		}
 	}
 
 }
 
-func sendToServer(data []LogStruct) {
-	if data == nil {
+func sendToServer(url string, data []LogStruct) {
+	if data == nil || url == "" {
 		return
 	}
 	d, _ := json.Marshal(data)
 
-	url := "https://webhook.site/c11e67a9-198d-4f2e-a130-6604aaaa471f"
 	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(d))
 
 	client := &http.Client{}
@@ -68,10 +68,10 @@ func check(e error) {
 }
 
 // Suggestion from https://gist.github.com/ryanfitz/4191392
-func FlushEveryFiveSeconds(c chan LogStruct, wg *sync.WaitGroup) {
+func FlushEveryFiveSeconds(conf config.Config, c chan LogStruct, wg *sync.WaitGroup) {
 	for {
 		time.Sleep(5 * time.Second)
 		fmt.Println("Periodic flushing!")
-		go flush(c, wg)
+		go flush(conf, c, wg)
 	}
 }
