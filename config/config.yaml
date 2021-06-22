@@ -1,0 +1,2 @@
+filepath: /var/log/syslog
+servicename: syslog
