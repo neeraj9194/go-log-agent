@@ -52,8 +52,9 @@ func sendToServer(url string, data []LogStruct) {
 		return
 	}
 	d, _ := json.Marshal(data)
-
+	
 	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(d))
+	req.Header.Set("content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

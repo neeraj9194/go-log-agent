@@ -54,7 +54,7 @@ func TestParseSyslog(t *testing.T) {
 
 func TestParseGeneric(t *testing.T) {
 	testString := `2009/01/23 01:23:23 Hello world this is a log message.`
-	d, _ := time.Parse("02/01/2006 15:04:05", "2009/01/23 01:23:23")
+	d, _ := time.Parse("2006/01/02 15:04:05", "2009/01/23 01:23:23")
 	expectedLog := LogStruct{
 		"",
 		"",
