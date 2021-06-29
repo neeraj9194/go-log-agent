@@ -14,7 +14,7 @@ go build main.go
 To run, 
 
 ```
-make run OR ./main
+make run OR ./go-log-agent
 ```
 
 To run tests
