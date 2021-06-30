@@ -1,6 +1,17 @@
 # go-log-agent
 A client service to read logs from a file and send it to a server.
 
+## Features
+
+- [x] Read logs from file
+- [x] Configuration
+
+## ToDo
+
+- [ ] Error handling (especially in buffer logic and parsing)
+- [ ] Logs send retry logic
+- [ ] Watch multiple files
+ 
 ## Install
 
 To install you can use makefile or build using commands
@@ -50,8 +61,4 @@ If the the channel is not full a periodic service is run to fulsh the data to se
 
 
 ![alt text](https://raw.githubusercontent.com/neeraj9194/go-log-agent/main/docs/arch.png)
-
-
-
-
 
