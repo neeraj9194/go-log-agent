@@ -3,13 +3,23 @@ package src
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/hpcloud/tail"
 	"github.com/neeraj9194/go-log-agent/config"
+)
+
+var (
+	retries   int = 5
+	retryTime int = 5
 )
 
 func ReadFile(conf config.Config, wg *sync.WaitGroup, logsChannel chan LogStruct, follow bool) {
@@ -23,8 +33,10 @@ func ReadFile(conf config.Config, wg *sync.WaitGroup, logsChannel chan LogStruct
 			flush(conf, logsChannel, wg)
 		}
 
-		l := ParseLog(conf.ServiceName, line.Text)
-		logsChannel <- l
+		l, err := ParseLog(conf.ServiceName, line.Text)
+		if err == nil {
+			logsChannel <- l
+		}
 	}
 	close(logsChannel)
 }
@@ -52,26 +64,48 @@ func sendToServer(url string, data []LogStruct) {
 		return
 	}
 	d, _ := json.Marshal(data)
-	
+
 	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(d))
 	req.Header.Set("content-Type", "application/json")
 
 	client := &http.Client{}
-	resp, err := client.Do(req)
-	check(err)
-	defer resp.Body.Close()
-}
 
-func check(e error) {
-	if e != nil {
-		panic(e)
+	for retries > 0 {
+		resp, err := client.Do(req)
+		if err != nil {
+			fmt.Println(err)
+			time.Sleep(time.Duration(retryTime) * time.Second)
+			retries -= 1
+		} else {
+			defer resp.Body.Close()
+			return
+		}
 	}
+	log.Fatal(errors.New("could not connect to server, max retries done"))
 }
 
-// Suggestion from https://gist.github.com/ryanfitz/4191392
 func FlushEveryFiveSeconds(conf config.Config, c chan LogStruct, wg *sync.WaitGroup) {
+
+	sigc := make(chan os.Signal, 1)
+	stop := make(chan bool, 1)
+	signal.Notify(sigc, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		sig := <-sigc
+		fmt.Println()
+		fmt.Println(sig)
+		flush(conf, c, wg)
+		stop <- true
+	}()
+
 	for {
 		time.Sleep(5 * time.Second)
+		select {
+		case <-stop:
+			fmt.Println("Stopping client...")
+			os.Exit(3)
+		default:
+		}
 		fmt.Println("Periodic flushing!")
 		go flush(conf, c, wg)
 	}

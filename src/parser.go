@@ -1,6 +1,7 @@
 package src
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"time"
@@ -27,10 +28,13 @@ type HTTP struct {
 
 // ===========Nginx============
 
-func parseNginxLog(logLine string) LogStruct {
+func parseNginxLog(logLine string) (l LogStruct, err error) {
+
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Printf("Errror while parsing: %v", logLine)
+			fmt.Printf("Errror while parsing: %v\n", logLine)
+			err = errors.New("could not parse")
+
 		}
 	}()
 	ipaddress_reg := regexp.MustCompile(`([0-9]{1,3}\.){3}[0-9]{1,3}|(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))`)
@@ -60,12 +64,12 @@ func parseNginxLog(logLine string) LogStruct {
 			ipaddress_data,
 			http_version_data,
 		},
-	}
+	}, err
 
 }
 
 // ===========Syslog============
-func parseSyslog(logLine string) LogStruct {
+func parseSyslog(logLine string) (LogStruct, error) {
 	// matches Golang like log : 2009/01/23 01:23:23 message...
 	re := regexp.MustCompile(`(?P<datetime>[A-Z][a-z][a-z]\s{1,2}\d{1,2}\s\d{2}[:]\d{2}[:]\d{2})\s(?P<machinename>[\w][\w\d\.@-]*)\s(?P<message>.*)`)
 	match := re.FindStringSubmatch(logLine)
@@ -87,16 +91,15 @@ func parseSyslog(logLine string) LogStruct {
 		result["message"],
 		"syslog",
 		HTTP{},
-	}
+	}, nil
 
 }
 
-
 // ===========Generic parser============
-func parseGenericLog(logLine string, service string) LogStruct {
+func parseGenericLog(logLine string, service string) (LogStruct, error) {
 	// matches Golang like log : 2009/01/23 01:23:23 message...
 	if logLine == "" {
-		return LogStruct{}
+		return LogStruct{}, errors.New("could not parse")
 	}
 	re := regexp.MustCompile(`(?P<datetime>\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}) (?P<message>[\.\w ]+)`)
 	match := re.FindStringSubmatch(logLine)
@@ -115,12 +118,11 @@ func parseGenericLog(logLine string, service string) LogStruct {
 		result["message"],
 		service,
 		HTTP{},
-	}
+	}, nil
 
 }
 
-
-func ParseLog(service string, log string) LogStruct {
+func ParseLog(service string, log string) (LogStruct, error) {
 
 	switch service {
 	case "syslog":

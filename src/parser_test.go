@@ -22,7 +22,7 @@ func TestParseNginxLog(t *testing.T) {
 			"HTTP/1.1\"",
 		},
 	}
-	parsedLog := ParseLog("nginx", testString)
+	parsedLog, _ := ParseLog("nginx", testString)
 
 	if !reflect.DeepEqual(expectedLog, parsedLog) {
 		fmt.Println("Res: ", parsedLog)
@@ -43,7 +43,7 @@ func TestParseSyslog(t *testing.T) {
 		"syslog",
 		HTTP{},
 	}
-	parsedLog := ParseLog("syslog", testString)
+	parsedLog, _ := ParseLog("syslog", testString)
 
 	if !reflect.DeepEqual(expectedLog, parsedLog) {
 		fmt.Println("Res: ", parsedLog)
@@ -63,7 +63,7 @@ func TestParseGeneric(t *testing.T) {
 		"",
 		HTTP{},
 	}
-	parsedLog := ParseLog("", testString)
+	parsedLog, _ := ParseLog("", testString)
 
 	if !reflect.DeepEqual(expectedLog, parsedLog) {
 		fmt.Println("Res: ", parsedLog)
@@ -74,7 +74,7 @@ func TestParseGeneric(t *testing.T) {
 
 func TestParseEmpty(t *testing.T) {
 	expectedLog := LogStruct{}
-	parsedLog := ParseLog("", "")
+	parsedLog, _ := ParseLog("", "")
 
 	if !reflect.DeepEqual(expectedLog, parsedLog) {
 		fmt.Println("Res: ", parsedLog)

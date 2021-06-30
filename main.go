@@ -27,7 +27,7 @@ var Usage = func() {
 
 func main() {
 	flag.Parse()
-
+	
 	conf := config.LoadConfig(*configFile)
 	logsChannel := make(chan src.LogStruct, 100)
 	var wg sync.WaitGroup
