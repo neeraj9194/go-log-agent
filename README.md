@@ -10,7 +10,7 @@ A client service to read logs from a file and send it to a server.
 
 - [x] Error handling (especially in buffer logic and parsing)
 - [x] Logs send retry logic
-- [ ] Watch multiple files
+- [x] Watch multiple files
  
 ## Install
 

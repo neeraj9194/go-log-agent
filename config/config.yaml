@@ -1,3 +1,6 @@
-filepath: /home/neeraj/projects/go-log-agent/config/nginx.log
-servicename: nginx
 serverurl: http://localhost:5000/
+watchers:
+  - filepath: /home/neeraj/projects/go-log-agent/config/nginx.log
+    servicename: nginx
+  - filepath: /home/neeraj/projects/go-log-agent/config/gen.log
+    servicename: generic

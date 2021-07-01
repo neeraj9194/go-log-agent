@@ -22,7 +22,7 @@ var (
 	retryTime int = 5
 )
 
-func ReadFile(conf config.Config, wg *sync.WaitGroup, logsChannel chan LogStruct, follow bool) {
+func ReadFile(conf config.Watcher, wg *sync.WaitGroup, logsChannel chan LogStruct, follow bool) {
 	defer wg.Done()
 	t, _ := tail.TailFile(conf.FilePath, tail.Config{Follow: follow})
 	for line := range t.Lines {
@@ -30,7 +30,7 @@ func ReadFile(conf config.Config, wg *sync.WaitGroup, logsChannel chan LogStruct
 		if len(logsChannel) == cap(logsChannel) {
 			// Channel was full, but might not be by now
 			fmt.Println("Channel full. Flushing!")
-			flush(conf, logsChannel, wg)
+			flush(logsChannel, wg)
 		}
 
 		l, err := ParseLog(conf.ServiceName, line.Text)
@@ -41,7 +41,7 @@ func ReadFile(conf config.Config, wg *sync.WaitGroup, logsChannel chan LogStruct
 	close(logsChannel)
 }
 
-func flush(conf config.Config, c chan LogStruct, wg *sync.WaitGroup) {
+func flush(c chan LogStruct, wg *sync.WaitGroup) {
 	wg.Add(1)
 	defer wg.Done()
 
@@ -52,7 +52,7 @@ func flush(conf config.Config, c chan LogStruct, wg *sync.WaitGroup) {
 		case val := <-c:
 			valList = append(valList, val)
 		default:
-			go sendToServer(conf.ServerURL, valList)
+			go sendToServer(config.ServerURL, valList)
 			return
 		}
 	}
@@ -84,7 +84,7 @@ func sendToServer(url string, data []LogStruct) {
 	log.Fatal(errors.New("could not connect to server, max retries done"))
 }
 
-func FlushEveryFiveSeconds(conf config.Config, c chan LogStruct, wg *sync.WaitGroup) {
+func FlushEveryFiveSeconds(c chan LogStruct, wg *sync.WaitGroup) {
 
 	sigc := make(chan os.Signal, 1)
 	stop := make(chan bool, 1)
@@ -94,7 +94,7 @@ func FlushEveryFiveSeconds(conf config.Config, c chan LogStruct, wg *sync.WaitGr
 		sig := <-sigc
 		fmt.Println()
 		fmt.Println(sig)
-		flush(conf, c, wg)
+		flush(c, wg)
 		stop <- true
 	}()
 
@@ -107,6 +107,6 @@ func FlushEveryFiveSeconds(conf config.Config, c chan LogStruct, wg *sync.WaitGr
 		default:
 		}
 		fmt.Println("Periodic flushing!")
-		go flush(conf, c, wg)
+		go flush(c, wg)
 	}
 }

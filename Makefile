@@ -4,5 +4,5 @@ build:
 run:
 	go run main.go
 
-test:
+tests:
 	go test ./... -v

@@ -27,13 +27,15 @@ var Usage = func() {
 
 func main() {
 	flag.Parse()
-	
+
 	conf := config.LoadConfig(*configFile)
 	logsChannel := make(chan src.LogStruct, 100)
 	var wg sync.WaitGroup
-	wg.Add(1)
-	go src.ReadFile(conf, &wg, logsChannel, true)
+	for _, watcher := range conf.Watchers {
+		wg.Add(1)
+		go src.ReadFile(watcher, &wg, logsChannel, true)
+	}
 	// Do every 5 seconds
-	go src.FlushEveryFiveSeconds(conf, logsChannel, &wg)
+	go src.FlushEveryFiveSeconds(logsChannel, &wg)
 	wg.Wait()
 }
